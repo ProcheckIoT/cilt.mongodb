@@ -1,14 +1,16 @@
 FROM mongo:4.2
-
 USER root
 
-# 1. Unlock the root account
-RUN usermod --unlock root 
+# Install openssh-server (this is the missing piece)
+RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*
 
-# 2. Give the 'mongodb' user a valid shell
+# Unlock the root account
+RUN usermod --unlock root
+
+# Give the 'mongodb' user a valid shell
 RUN usermod -s /bin/bash mongodb
 
-# 3. Create the required .ssh directories and set strict permissions
+# Create the required .ssh directories and set strict permissions
 RUN mkdir -p /root/.ssh && chmod 0700 /root/.ssh
 RUN mkdir -p /home/mongodb/.ssh && \
     chown -R mongodb:mongodb /home/mongodb && \
