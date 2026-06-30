@@ -9,11 +9,16 @@ RUN mkdir -p /home/mongodb && \
     chown -R mongodb:mongodb /home/mongodb && \
     chmod 0700 /home/mongodb/.ssh
 
+# Generate a keyFile for replica set internal auth
+RUN openssl rand -base64 756 > /etc/mongo-keyfile && \
+    chmod 400 /etc/mongo-keyfile && \
+    chown mongodb:mongodb /etc/mongo-keyfile
+
 RUN cat <<'EOF' > /usr/local/bin/start-mongo.sh
 #!/bin/sh
 set -e
 
-mongod --replSet rs0 --bind_ip_all --auth --dbpath /data/db &
+mongod --replSet rs0 --bind_ip_all --auth --keyFile /etc/mongo-keyfile --dbpath /data/db &
 MONGO_PID=$!
 
 until mongosh --quiet --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
